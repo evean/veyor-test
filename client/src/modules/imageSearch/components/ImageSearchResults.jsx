@@ -5,6 +5,8 @@
  *
  * The view will display a loader while results are being loaded, or an error message if there was
  * a problem fetching the results.
+ *
+ * Future developments: Add pagination and/or infinite scroll
  */
 
 import PropTypes from 'prop-types'
@@ -15,17 +17,24 @@ import ImageThumbnail from './ImageThumbnail'
 import LoaderIcon from 'react-loader-icon'
 import '../stylesheets/ImageSearchPage.scss'
 
-const LABELS = {
-  REFRESH: 'Refresh',
-  SHOW_FEED: 'Show feed'
-}
-
 const MESSAGES = {
   ALL_PHOTOS: 'Photos from everyone',
   ERROR: 'There was an error fetching search results',
   NO_RESULTS: 'Your search returned no results. Please try a different search term.',
   SEARCH_RESULTS_FOR: 'Showing search results for:',
   TRY_AGAIN: 'Please try again later.'
+}
+
+const VIEW_MODES = {
+  FEED: 'feed',
+  SEARCH: 'search'
+}
+
+const LABELS = {
+  REFRESH: {
+    [VIEW_MODES.FEED]: 'Refresh',
+    [VIEW_MODES.SEARCH]: 'Show feed'
+  }
 }
 
 class ImageSearchResults extends Component {
@@ -90,13 +99,12 @@ class ImageSearchResults extends Component {
    * @return {Component} A single button or an empty div if the feed view is disabled.
    */
   renderActions() {
-    const { autoFetch, items, loading, searchTerm } = this.props
+    const { autoFetch, items, loading } = this.props
     if (!autoFetch || loading || !items.length) return <div />
-    const buttonLabel = !searchTerm ? LABELS.REFRESH : LABELS.SHOW_FEED
 
     return (
       <Button onClick={autoFetch}>
-        {buttonLabel}
+        {LABELS.REFRESH[this.getViewMode()]}
       </Button>
     )
   }
@@ -113,21 +121,12 @@ class ImageSearchResults extends Component {
   }
 
   /**
-   * Returns the title from the feed if applicable, or a title containing the current search term.
-   * @return {String} The title to be displayed
+   * Renders a list of ImageThumbnails
+   * @param  {Array} items  An array of formatted image objects
+   * @return {Array}        An array of ImageThumbnail components
    */
-  getTitle() {
-    return !this.props.searchTerm
-      ? this.props.autoFetch && MESSAGES.ALL_PHOTOS
-      : `${MESSAGES.SEARCH_RESULTS_FOR} ${this.props.searchTerm}`
-  }
-
-  render() {
-    const { error, items } = this.props
-    const imagesLoaded = this.state.imagesLoaded.length >= items.length
-    const loading = this.props.loading || !imagesLoaded
-
-    const results = items.map(item => (
+  renderResults(items) {
+    return items.map(item => (
       <ImageThumbnail
         key={item.id}
         className="results__image"
@@ -135,6 +134,31 @@ class ImageSearchResults extends Component {
         {...item}
       />
     ))
+  }
+
+  /**
+   * Returns default title if in view mode, or a title containing the current search term.
+   * @return {String} The title to be displayed
+   */
+  getTitle() {
+    return this.getViewMode() === VIEW_MODES.FEED
+      ? this.props.autoFetch && MESSAGES.ALL_PHOTOS
+      : `${MESSAGES.SEARCH_RESULTS_FOR} ${this.props.searchTerm}`
+  }
+
+  /**
+   * Returns the current view mode based on props
+   * @return {String} Current view mode
+   */
+  getViewMode() {
+    return !this.props.searchTerm && this.props.autoFetch
+      ? VIEW_MODES.FEED
+      : VIEW_MODES.SEARCH
+  }
+
+  render() {
+    const { error, items } = this.props
+    const loading = this.props.loading || this.state.imagesLoaded.length < items.length
 
     return (
       <div className="results">
@@ -142,7 +166,7 @@ class ImageSearchResults extends Component {
         {loading && !error && <LoaderIcon className="results__loader" />}
 
         {!loading && !error &&
-          <div>
+          <>
             {!items.length && this.props.searchTerm && <p>{MESSAGES.NO_RESULTS}</p>}
 
             <div className="results__top-bar">
@@ -151,12 +175,12 @@ class ImageSearchResults extends Component {
               </h2>
               {this.renderActions()}
             </div>
-          </div>
+          </>
         }
 
         {!this.props.loading &&
           <Masonry className={`results__gallery ${!loading ? 'loaded' : ''}`}>
-            {results}
+            {this.renderResults(items)}
           </Masonry>
         }
       </div>
