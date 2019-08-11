@@ -141,10 +141,6 @@ class ImageSearchResults extends Component {
         {error && this.renderError()}
         {loading && !error && <LoaderIcon className="results__loader" />}
 
-        <h2 className="results__title">
-          {this.getTitle()}
-        </h2>
-
         {!loading && !error &&
           <div>
             {!items.length && this.props.searchTerm && <p>{MESSAGES.NO_RESULTS}</p>}
