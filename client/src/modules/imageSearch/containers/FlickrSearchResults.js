@@ -18,8 +18,6 @@ const mapStateToProps = (state, ownProps) => {
     .map(item => parseFlickrImageData(item))
     .filter(item => item.url)
 
-  console.log(items)
-
   return {
     ...ownProps,
     error,
