@@ -1,11 +1,11 @@
-Back end:
-
-### `npm install`
-### `npm start`
-
 Front end:
 
 ### `cd client`
+### `npm install`
+### `npm build`
+
+Back end:
+
 ### `npm install`
 ### `npm start`
 
