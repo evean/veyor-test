@@ -1,10 +1,4 @@
-Front end:
-
-### `cd client`
-### `npm install`
-### `npm build`
-
-Back end:
+To install and run:
 
 ### `npm install`
 ### `npm start`
